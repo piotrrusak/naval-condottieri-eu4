@@ -263,7 +263,7 @@ static bool add_contract(CNavy *navy,
     }
 
     if (find_contract(navy) != NULL) {
-        navlog("add_contract: navy=%p already registered", navy);
+        navlog("add_contract: navy already registered");
         return false;
     }
 
@@ -277,8 +277,10 @@ static bool add_contract(CNavy *navy,
 
     g_contract_count++;
 
-    navlog("CONTRACT ADDED navy=%p owner=%p renter=%p cost=%d count=%d",
-           navy, contractor, contracter, cost, g_contract_count);
+    navlog(
+        "CONTRACT ADDED navy=%p owner=%p renter=%p cost=%d count=%d",
+        navy, contractor, contracter, cost, g_contract_count
+    );
 
     return true;
 }
@@ -296,8 +298,10 @@ static bool remove_contract(CNavy *navy)
 
         g_contract_count--;
 
-        navlog("CONTRACT REMOVED navy=%p count=%d",
-               navy, g_contract_count);
+        navlog(
+            "CONTRACT REMOVED navy=%p count=%d",
+            navy, g_contract_count
+        );
 
         return true;
     }
@@ -444,7 +448,10 @@ static void register_navy_ui_entry(CArmyItem *item, CNavy *navy)
     e->checkbox = checkbox;
     e->selected = false;
 
-    navlog("UI NAVY registered item=%p navy=%p checkbox=%p", item, navy, checkbox);
+    navlog(
+        "UI NAVY registered item=%p navy=%p checkbox=%p",
+        item, navy, checkbox
+    );
 }
 
 /* ========================================================= */
@@ -485,8 +492,10 @@ static gboolean install_buildunitlist_patch(void)
     if (g_saved_branch[0] != 0x74 ||
         g_saved_branch[1] != 0x0e) {
 
-        navlog("ERROR BuildUnitList: got %02x %02x expected 74 0e or 90 90",
-               g_saved_branch[0], g_saved_branch[1]);
+        navlog(
+            "ERROR BuildUnitList: got %02x %02x expected 74 0e or 90 90",
+            g_saved_branch[0], g_saved_branch[1]
+        );
 
         return FALSE;
     }
@@ -561,8 +570,10 @@ static void armyitem_update_replacement(CArmyItem *self)
         register_navy_ui_entry(self, (CNavy *) unit);
         navy_item_set_name(self, unit);
 
-        navlog("CArmyItem::Update CNavy NAME-ONLY item=%p navy=%p",
-               self, unit);
+        navlog(
+            "CArmyItem::Update CNavy NAME-ONLY item=%p navy=%p",
+            self, unit
+        );
         return;
     }
 
@@ -588,7 +599,10 @@ static gboolean install_armyitem_update_hook(void)
     gum_interceptor_end_transaction(g_interceptor);
 
     if (result != GUM_REPLACE_OK) {
-        navlog("ERROR Update replace=%d", (int) result);
+        navlog(
+            "ERROR Update replace=%d",
+            (int) result
+        );
         return FALSE;
     }
 
@@ -597,7 +611,10 @@ static gboolean install_armyitem_update_hook(void)
 
     g_update_hook_installed = TRUE;
 
-    navlog("CArmyItem::Update hooked @ 0x%llx original=%p", (unsigned long long) ADDR_CARMYITEM_UPDATE, original);
+    navlog(
+        "CArmyItem::Update hooked @ 0x%llx original=%p",
+        (unsigned long long) ADDR_CARMYITEM_UPDATE, original
+    );
 
     return TRUE;
 }
@@ -634,13 +651,10 @@ static void offer_ctor_on_enter(GumInvocationContext *ic, gpointer user_data)
     tag_to_string(counterpart_tag, counterpart_s);
     tag_to_string(player_tag, player_s);
 
-    navlog("Offer dialog OPEN dialog=%p view=%p counterpart=%s(%u) player=%s(%u)",
-           g_active_dialog,
-           g_active_view,
-           counterpart_s,
-           (unsigned) tag_get_index(counterpart_tag),
-           player_s,
-           (unsigned) tag_get_index(player_tag));
+    navlog(
+        "Offer dialog OPEN dialog=%p view=%p counterpart=%s(%u) player=%s(%u)",
+        g_active_dialog, g_active_view, counterpart_s, (unsigned) tag_get_index(counterpart_tag), player_s, (unsigned) tag_get_index(player_tag)
+    );
 }
 
 static gboolean install_ctor_listener(void)
@@ -664,7 +678,10 @@ static gboolean install_ctor_listener(void)
             NULL
         );
 
-    navlog("Offer ctor listener result=%d", (int) result);
+    navlog(
+        "Offer ctor listener result=%d",
+        (int) result
+    );
 
     return result == GUM_ATTACH_OK;
 }
@@ -697,8 +714,7 @@ static void button_click_on_enter(GumInvocationContext *ic, gpointer user_data)
     if (g_active_dialog != NULL) {
         navlog(
             "CLICK object=%p name=%s",
-            clicked_object,
-            name != NULL ? name : "<null>"
+            clicked_object, name != NULL ? name : "<null>"
         );
     }
 }
@@ -724,7 +740,10 @@ static gboolean install_click_listener(void)
             NULL
         );
 
-    navlog("NotifyClicked listener result=%d", (int) result);
+    navlog(
+        "NotifyClicked listener result=%d",
+        (int) result
+    );
 
     return result == GUM_ATTACH_OK;
 }
@@ -776,9 +795,7 @@ static void offer_onaccept_replacement(
         g_navy_ui_count == 0 ||
         selected == 0
     ) {
-        navlog(
-            "OFFER -> vanilla OnAccept"
-        );
+        navlog("OFFER -> vanilla OnAccept");
 
         if (g_original_onaccept != NULL)
             g_original_onaccept(self);
@@ -858,7 +875,10 @@ static gboolean install_onaccept_hook(void)
     gum_interceptor_end_transaction(g_interceptor);
 
     if (result != GUM_REPLACE_OK) {
-        navlog("ERROR OnAccept replace=%d", (int) result);
+        navlog(
+            "ERROR OnAccept replace=%d",
+            (int) result
+        );
         return FALSE;
     }
 
@@ -867,9 +887,10 @@ static gboolean install_onaccept_hook(void)
 
     g_onaccept_hook_installed = TRUE;
 
-    navlog("Offer OnAccept hooked @ 0x%llx original=%p",
-           (unsigned long long) ADDR_OFFER_DIALOG_ONACCEPT,
-           original);
+    navlog(
+        "Offer OnAccept hooked @ 0x%llx original=%p",
+        (unsigned long long) ADDR_OFFER_DIALOG_ONACCEPT, original
+    );
 
     return TRUE;
 }
@@ -970,7 +991,10 @@ static gboolean install_mayfight_hook(void)
             NULL
         );
 
-    navlog("MayFight listener result=%d", (int) result);
+    navlog(
+        "MayFight listener result=%d",
+        (int) result
+    );
 
     return result == GUM_ATTACH_OK;
 }
@@ -1081,7 +1105,12 @@ __attribute__((constructor)) static void nav_condottieri_init(void)
 
     navlog(
         "status BuildList=%s Update=%s Ctor=%s Click=%s Accept=%s MayFight=%s",
-        build_ok ? "OK" : "FAIL", update_ok ? "OK" : "FAIL", ctor_ok ? "OK" : "FAIL", click_ok ? "OK" : "FAIL", accept_ok ? "OK" : "FAIL", mayfight_ok ? "OK" : "FAIL"
+        build_ok ? "OK" : "FAIL",
+        update_ok ? "OK" : "FAIL",
+        ctor_ok ? "OK" : "FAIL",
+        click_ok ? "OK" : "FAIL",
+        accept_ok ? "OK" : "FAIL",
+        mayfight_ok ? "OK" : "FAIL"
     );
 
     navlog("ready");
