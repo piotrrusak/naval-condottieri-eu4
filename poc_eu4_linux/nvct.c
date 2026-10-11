@@ -8,24 +8,17 @@
 /*
  * EU4 Linux x86-64 - Naval Condottieri integrated prototype
  *
- * Łączy:
- *   1) wpuszczenie CNavy do vanilla Offer Condottieri listy,
- *   2) pominięcie army-only CArmyItem::Update() dla flot,
- *   3) śledzenie kliknięć checkboxów fleet-entry,
- *   4) przejęcie COfferCondottieriDiplomacyDialog::OnAccept(),
- *   5) utworzenie NavalCondottieriContract po kliknięciu "Confirm",
- *   6) istniejący override CUnit::MayFight() oparty o renter wars.
- *
- * Założenie prototypu:
- *   - dla wybranej floty NIE wywołujemy vanilla OnAccept(),
- *     bo vanilla ścieżka jest army-condottieri-specific.
- *   - kontrakt powstaje w naszym registry.
- *
  * To Do:
- *   - zamykanie się okna po kliknięciu confirm
  *   - mechanizm break condottieri
  *   - rozbicie tego monolitu na sensowne pliki
  */
+
+/* ========================================================= */
+/* CONSTANTS                                               */
+/* ========================================================= */
+
+#define MAX_CONTRACTS 128
+#define MAX_NAVY_UI_ENTRIES 128
 
 /* ========================================================= */
 /* OPAQUE TYPES                                              */
@@ -37,39 +30,34 @@ typedef void CCountry;
 typedef void CArmyItem;
 typedef void COfferCondottieriDiplomacyDialog;
 typedef void CCountryDiplomacyView;
-
 typedef uint64_t CCountryTag;
 
 /* ========================================================= */
 /* BUILD-SPECIFIC ADDRESSES                                  */
 /* ========================================================= */
 
-#define ADDR_MAY_FIGHT                    0x00000000018fee80ULL
-#define ADDR_WAR_HAS_ENTRY                0x0000000000db8724ULL
-
-#define ADDR_BUILDUNITLIST_ISARMY_JE      0x0000000001dd6604ULL
-#define ADDR_CARMYITEM_UPDATE              0x0000000001dd7a7cULL
-#define ADDR_OFFER_DIALOG_CTOR             0x0000000001dd5368ULL
-#define ADDR_OFFER_DIALOG_ONACCEPT         0x0000000001dd6a4aULL
-#define ADDR_BUTTON_NOTIFY_CLICKED         0x0000000002058d7cULL
-#define ADDR_GUIOBJECT_GET_NAME             0x0000000001b4b878ULL
-#define ADDR_INSTANTTEXT_CHANGE_CSTRING      0x000000000208b442ULL
-#define ADDR_CCOUNTRYDIPLOMACYVIEW_SHOWMAINWINDOW     0x0000000001a71dd4ULL
-
-#define ADDR_COUNTRY_DATABASE_PTR          0x0000000002fc52f8ULL
+#define ADDR_MAY_FIGHT                                 0x00000000018fee80ULL
+#define ADDR_WAR_HAS_ENTRY                             0x0000000000db8724ULL
+#define ADDR_BUILDUNITLIST_ISARMY_JE                   0x0000000001dd6604ULL
+#define ADDR_CARMYITEM_UPDATE                          0x0000000001dd7a7cULL
+#define ADDR_OFFER_DIALOG_CTOR                         0x0000000001dd5368ULL
+#define ADDR_OFFER_DIALOG_ONACCEPT                     0x0000000001dd6a4aULL
+#define ADDR_BUTTON_NOTIFY_CLICKED                     0x0000000002058d7cULL
+#define ADDR_GUIOBJECT_GET_NAME                        0x0000000001b4b878ULL
+#define ADDR_INSTANTTEXT_CHANGE_CSTRING                0x000000000208b442ULL
+#define ADDR_CCOUNTRYDIPLOMACYVIEW_SHOWMAINWINDOW      0x0000000001a71dd4ULL
+#define ADDR_COUNTRY_DATABASE_PTR                      0x0000000002fc52f8ULL
 
 /* ========================================================= */
 /* OFFSETS                                                   */
 /* ========================================================= */
 
-#define OFFSET_UNIT_COUNTRY_TAG            0x0c8
-#define OFFSET_COUNTRY_WARS                0x1530
-
-#define OFFSET_CARMYITEM_UNIT              0x0b8
-#define OFFSET_CARMYITEM_INFO_TEXT         0x130
-#define OFFSET_CARMYITEM_CHECKBOX          0x138
-
-#define VTABLE_SLOT_IS_NAVY                0x0a0
+#define OFFSET_UNIT_COUNTRY_TAG                        0x0c8
+#define OFFSET_COUNTRY_WARS                            0x1530
+#define OFFSET_CARMYITEM_UNIT                          0x0b8
+#define OFFSET_CARMYITEM_INFO_TEXT                     0x130
+#define OFFSET_CARMYITEM_CHECKBOX                      0x138
+#define VTABLE_SLOT_IS_NAVY                            0x0a0
 
 /*
  * CCountryDiplomacyView - observed semantics for this Offer Condottieri path:
@@ -81,14 +69,16 @@ typedef uint64_t CCountryTag;
  * units while a dialog showed e.g. +0x208=MKL and +0x218=DAN, and the listed
  * navy's owner resolved to DAN.
  */
-#define OFFSET_DIPLO_VIEW_COUNTERPART_TAG  0x208
-#define OFFSET_DIPLO_VIEW_PLAYER_TAG       0x218
+
+#define OFFSET_DIPLO_VIEW_COUNTERPART_TAG              0x208
+#define OFFSET_DIPLO_VIEW_PLAYER_TAG                   0x218
 
 /*
  * CCountryDataBase:
  *   +0xf8 -> CCountry ** by country index
  */
-#define OFFSET_COUNTRY_DB_COUNTRY_ARRAY    0x0f8
+
+#define OFFSET_COUNTRY_DB_COUNTRY_ARRAY                0x0f8
 
 /* ========================================================= */
 /* LOG                                                       */
@@ -235,8 +225,6 @@ typedef struct {
     CCountry *contracter;
     int cost;
 } NavalCondottieriContract;
-
-#define MAX_CONTRACTS 128
 
 static NavalCondottieriContract g_contracts[MAX_CONTRACTS];
 static int g_contract_count = 0;
@@ -400,8 +388,6 @@ typedef struct {
     void *checkbox;
     bool selected;
 } NavyUiEntry;
-
-#define MAX_NAVY_UI_ENTRIES 128
 
 static NavyUiEntry g_navy_ui_entries[MAX_NAVY_UI_ENTRIES];
 static int g_navy_ui_count = 0;
