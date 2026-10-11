@@ -1,0 +1,13 @@
+frida := env("FRIDA_DEVKIT", home_directory() / "frida-devkit")
+out := "build"
+
+# Build every nvct_*.c into build/<name>.so
+build:
+    mkdir -p {{out}}
+    for f in nvct_*.c; do \
+        echo "=== $f"; \
+        gcc -shared -fPIC "$f" -I {{frida}} {{frida}}/libfrida-gum.a -pthread -ldl -o "{{out}}/${f%.c}.so" || exit 1; \
+    done
+
+clean:
+    rm -rf {{out}}
